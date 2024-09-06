@@ -10,6 +10,8 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(example_interfaces REQUIRED)
+find_package(rttest)
+find_package(tlsf_cpp)
 
 # include directories
 include_directories(
@@ -19,20 +21,20 @@ include_directories(
 # Topic Communication Example
 # Publisher 
 add_executable(realtime_publisher_node src/realtime_publisher_node.cpp)
-ament_target_dependencies(realtime_publisher_node rclcpp std_msgs)
+ament_target_dependencies(realtime_publisher_node rclcpp std_msgs rttest tlsf_cpp)
 
 # Subscriber
 add_executable(realtime_subscriber_node src/realtime_subscriber_node.cpp)
-ament_target_dependencies(realtime_subscriber_node rclcpp std_msgs)
+ament_target_dependencies(realtime_subscriber_node rclcpp std_msgs rttest)
 
 # Service Communication Example
 # Server
 add_executable(realtime_service_server_node src/realtime_service_server_node.cpp)
-ament_target_dependencies(realtime_service_server_node rclcpp example_interfaces)
+ament_target_dependencies(realtime_service_server_node rclcpp example_interfaces rttest)
 
 # Client
 add_executable(realtime_service_client_node src/realtime_service_client_node.cpp)
-ament_target_dependencies(realtime_service_client_node rclcpp example_interfaces)
+ament_target_dependencies(realtime_service_client_node rclcpp example_interfaces rttest)
 
 
 install(TARGETS

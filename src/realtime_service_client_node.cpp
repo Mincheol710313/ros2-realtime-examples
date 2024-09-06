@@ -24,7 +24,7 @@ public:
         this->get_parameter("loop_count", loop_count_);
         minimal_client_ = this->create_client<AddTwoInts>("add_two_ints");
         timer_ = this->create_wall_timer(
-            std::chrono::milliseconds(cycle_time_ms_),
+            std::chrono::microseconds(500),
             std::bind(&MinimalClient::request_result, this)
         );
     }
@@ -57,7 +57,7 @@ private:
                         RCLCPP_INFO(this->get_logger(), "Latency : %ld ns, Cycle Time : 0 ns, Result : %ld", latency, result->sum);
                     else{
                         auto cycle_time = std::chrono::duration_cast<std::chrono::nanoseconds>(start-this->prev_start);
-                        auto jitter = std::chrono::duration_cast<std::chrono::nanoseconds>(cycle_time - 1ms);
+                        auto jitter = std::chrono::duration_cast<std::chrono::nanoseconds>(cycle_time - std::chrono::microseconds(500U));
                         RCLCPP_INFO(this->get_logger(), "Latency : %ld ns, Cycle Time : %ld ns, Jitter : %ld ns, Result : %ld", latency, cycle_time, jitter, result->sum);
                     }
                     this->prev_start = start;

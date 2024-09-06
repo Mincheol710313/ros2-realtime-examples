@@ -5,8 +5,10 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 
-#include <pthread.h>
-#include <thread>
+#include "realtime_node/command_line_options.hpp"
+#include "realtime_node/sched_utils.hpp"
+#include "realtime_node/rusage_utils.hpp"
+#include "realtime_node/memory_lock_utils.hpp"
 
 using namespace std::chrono_literals;
 
@@ -30,18 +32,24 @@ private:
 
 int main(int argc, char * argv[])
 {   
-    struct sched_param param;
-    param.sched_priority = 99;
+    // Force flush of the stdout buffer
+    setvbuf(stdout, NULL, _IONBF, BUFSIZ);
+
+    // Read Scheduling Option in Command Line
+    auto options_reader = SchedOptionsReader();
+    if(!options_reader.read_options(argc, argv)){
+        options_reader.print_usage();
+        return 0;
+    }
+
+    // Get Scheduling Option
+    auto options = options_reader.get_options();
+
+    set_thread_scheduling(pthread_self(), options.policy, options.priority);
 
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<MinimalSubscriber>();
-    auto spin_thread = std::thread(
-        [&](){
-            rclcpp::spin(node);
-        });
-    pthread_setschedparam(spin_thread.native_handle(), SCHED_FIFO,&param);
-    
-    spin_thread.join();
+
+    rclcpp::spin(std::make_shared<MinimalSubscriber>());
     rclcpp::shutdown();
     return 0;
 }
