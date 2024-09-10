@@ -5,23 +5,14 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/strategies/allocator_memory_strategy.hpp"
 
-#include "tlsf_cpp/tlsf.hpp"
-
 #include "std_msgs/msg/string.hpp"
 
-#include "rttest/rttest.h"
-
-#include "realtime_node/rtt_executor.hpp"
 #include "realtime_node/command_line_options.hpp"
 #include "realtime_node/sched_utils.hpp"
 #include "realtime_node/rusage_utils.hpp"
 #include "realtime_node/memory_lock_utils.hpp"
 
 using namespace std::chrono_literals;
-using rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy;
-
-template<typename  T = void>
-using TLSFAllocator = tlsf_heap_allocator<T>;
 
 class MinimalPublisher : public rclcpp::Node
 {
@@ -52,39 +43,26 @@ private:
 int main(int argc, char * argv[])
 {   
     // Force flush of the stdout buffer
-    // setvbuf(stdout, NULL, _IONBF, BUFSIZ);
+    setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
-    // // Read Scheduling Option in Command Line
-    // auto options_reader = SchedOptionsReader();
-    // if(!options_reader.read_options(argc, argv)){
-    //     options_reader.print_usage();
-    //     return 0;
-    // }
+    // Read Scheduling Option in Command Line
+    auto options_reader = SchedOptionsReader();
+    if(!options_reader.read_options(argc, argv)){
+        options_reader.print_usage();
+        return 0;
+    }
 
-    // // Get Scheduling Option
-    // auto options = options_reader.get_options();
+    // Get Scheduling Option
+    auto options = options_reader.get_options();
 
-    // set_thread_scheduling(pthread_self(), options.policy, options.priority);
+    set_thread_scheduling(pthread_self(), options.policy, options.priority);
 
-    // // Lock Memoty
-    // lock_memory();
-    // preallocate_memory(100 * 1024 * 1024);
-    rttest_read_args(argc, argv);
+    // Lock Memoty
+    lock_memory();
+    preallocate_memory(100 * 1024 * 1024);
 
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<MinimalPublisher>();
-
-    // Executor Option
-    rclcpp::ExecutorOptions options;
-    rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy =
-        std::make_shared<AllocatorMemoryStrategy<TLSFAllocator<void>>>();
-    options.memory_strategy = memory_strategy;
-
-    auto executor = std::make_shared<pendulum_control::RttExecutor>(options);
-
-    executor->add_node(node);
-
-    executor->spin();
+    rclcpp::spin(std::make_shared<MinimalPublisher>());
     rclcpp::shutdown();
     return 0;
 }
